@@ -36,6 +36,6 @@ df_wc = df_xml \
 print(df_wc.count(), "words found")
 print("saving dataframe...")
 df_wc.write.saveAsTable(language)
-print(f"saved {language}")
+print("saved, language")
 
 spark.sparkContext.stop()
