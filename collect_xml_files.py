@@ -24,9 +24,9 @@ df_xml = spark.read \
     .option("rootTag", "document") \
     .load("./subtitles/"+ language + "/*/*/*/2015/*/*.xml.gz") # spark does not support recursive load
 
-print(df_wc.count(), "words found")
+print(df_xml.count(), "words found")
 print("saving dataframe...")
-df_wc.write.saveAsTable(language)
+df_xml.write.saveAsTable(language)
 print("saved, language")
 
 spark.sparkContext.stop()
