@@ -99,3 +99,7 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+subtitles/
+spark-warehouse/
+metastore_db/
