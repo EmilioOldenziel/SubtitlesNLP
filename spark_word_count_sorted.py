@@ -14,8 +14,9 @@ spark = SparkSession \
     .enableHiveSupport()
     .getOrCreate()
 
+df_subtitles = spark.sql(f"SELECT * FROM nl")
 
-df_wc = df_xml \
+df_wc = df_subtitles \
     .withColumn("word", explode(col("w"))) \
     .drop("w") \
     .groupBy("word").agg(count(col("word"))) \

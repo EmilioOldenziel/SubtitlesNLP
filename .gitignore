@@ -103,3 +103,7 @@ ENV/
 subtitles/
 spark-warehouse/
 metastore_db/
+
+Pipfile*
+
+*vscode*
