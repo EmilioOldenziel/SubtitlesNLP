@@ -2,6 +2,7 @@
 # coding: utf-8
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import udf, col, explode, count
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType
 from os import environ, path
 
 # warehouse_location points to the default location for managed databases and tables
@@ -18,17 +19,20 @@ take_first = udf(lambda l: l[0]) # take first from list
 
 language = "af"
 
+schema = StructType([
+    StructField('w', ArrayType(StringType()))
+])
+
 # read xml files as df
 df_xml = spark.read \
     .format("com.databricks.spark.xml") \
     .option("rowTag", "s") \
     .option("rootTag", "document") \
-    .load("./subtitles/"+ language + "/*/*/*/*/*/*.xml.gz") # spark does not support recursive load
+    .load("./subtitles/"+ language + "/*/*/*/*/*/*.xml.gz", schema=schema) # spark does not support recursive load
 
 df_wc = df_xml \
-    .withColumn("words", explode(col("w"))) \
-    .drop("_emphasis", "_id", "time", "w") \
-    .withColumn("word", take_first(col("words"))) \
+    .withColumn("word", explode(col("w"))) \
+    .drop("w") \
     .groupBy("word").agg(count(col("word"))) \
     .select(col("word"),col("count(word)").alias("frequency")) \
     .sort(col("frequency").desc())
