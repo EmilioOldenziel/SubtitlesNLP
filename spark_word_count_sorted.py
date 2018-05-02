@@ -3,7 +3,7 @@
 import argparse
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, explode, count
-from os import path
+from os import path, environ
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--l', help='give language', required=True)
@@ -11,6 +11,13 @@ args = parser.parse_args()
 
 # warehouse_location points to the default location for managed databases and tables
 warehouse_location = path.abspath('spark-warehouse')
+
+# set driver memory
+submit_args = [
+    '--driver-memory 15g',
+    'pyspark-shell'
+]
+environ['PYSPARK_SUBMIT_ARGS'] =  " ".join(submit_args)
 
 spark = SparkSession \
     .builder \

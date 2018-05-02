@@ -14,8 +14,13 @@ args = parser.parse_args()
 # warehouse_location points to the default location for managed databases and tables
 warehouse_location = path.abspath('spark-warehouse')
 
-# load spark-xml
-environ['PYSPARK_SUBMIT_ARGS'] = '--packages com.databricks:spark-xml_2.11:0.4.1 pyspark-shell' 
+# load spark-xml and set driver memory
+submit_args = [
+    '--packages com.databricks:spark-xml_2.11:0.4.1',
+    '--driver-memory 15g',
+    'pyspark-shell'
+]
+environ['PYSPARK_SUBMIT_ARGS'] =  " ".join(submit_args)
 
 spark = SparkSession \
     .builder \
