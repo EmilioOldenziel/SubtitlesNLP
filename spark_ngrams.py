@@ -30,17 +30,19 @@ spark = SparkSession \
 print("web URL", spark.sparkContext.uiWebUrl)
 language = args.l
 
-stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ","]) # init stopword remover
-ngram = NGram(n=2, inputCol="filtered_words", outputCol="ngrams")  # init ngram maker
+#stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ","]) # init stopword remover
+ngram = NGram(n=2, inputCol="words", outputCol="ngrams")  # init ngram maker
 
 df_subtitles = spark.sql("SELECT * FROM " + language).select(col('w').alias('words'))
 
-df_words = stopwords_remover \
-    .transform(df_subtitles) \
-    .drop("words") \
+# df_words = stopwords_remover \
+#     .transform(df_subtitles) \
+#     .drop("words") \
 
-df_words = ngram.transform(df_words) # make ngrams with n=2 (words)
-df_words = df_words.drop("filtered_words").withColumn("ngrams", explode(col("ngrams")))
+df_words = ngram.transform(df_subtitles) # make ngrams with n=2 (words)
+df_words = df_words.drop("words").withColumn("ngrams", explode(col("ngrams")))
+
+print(df_words.count())
 
 print("saving dataframe...")
 df_words.write.mode("overwrite").saveAsTable("ng_"+language)
