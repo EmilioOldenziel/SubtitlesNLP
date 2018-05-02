@@ -3,12 +3,12 @@
 import argparse
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, count
-from pyspark.ml.feature import NGram, StopWordsRemover, Tokenizer
+from pyspark.sql.functions import col, explode
+from pyspark.ml.feature import NGram, StopWordsRemover
 from os import environ, path
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--l', help='give language', required=True)
+parser.add_argument('--language', help='give language to parse', required=True)
 args = parser.parse_args()
 
 # warehouse_location points to the default location for managed databases and tables
@@ -27,25 +27,36 @@ spark = SparkSession \
     .config("spark.sql.warehouse.dir", warehouse_location) \
     .enableHiveSupport().getOrCreate()
 
-print("web URL", spark.sparkContext.uiWebUrl)
-language = args.l
+# print spark webinterface url
+print("Web URL:", spark.sparkContext.uiWebUrl)
 
-#stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ","]) # init stopword remover
-ngram = NGram(n=2, inputCol="words", outputCol="ngrams")  # init ngram maker
+# set subtitle language to make ngram of
+language = args.language
 
+# init stopword remover
+stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ","]) 
+# init ngram maker
+ngram = NGram(n=2, inputCol="filtered_words", outputCol="ngrams")  
+
+# check if table exists for language, if not: quit
+if language not in [table.name for  table in spark.catalog.listTables()]:
+    print("Hive tables for language", language, "was not found")
+    exit(-1)
+
+#read table
 df_subtitles = spark.sql("SELECT * FROM " + language).select(col('w').alias('words'))
 
-# df_words = stopwords_remover \
-#     .transform(df_subtitles) \
-#     .drop("words") \
+# remove stopwords
+df_words_clean = stopwords_remover.transform(df_subtitles.dropna())
+df_words_clean = df_words_clean.drop("words").dropna()
 
-df_words = ngram.transform(df_subtitles) # make ngrams with n=2 (words)
-df_words = df_words.drop("words").withColumn("ngrams", explode(col("ngrams")))
+# make ngrams with n=2 (words)
+df_ngrams = ngram.transform(df_words_clean) 
+df_ngrams = df_ngrams.drop("filtered_words").dropna().withColumn("ngrams", explode(col("ngrams")))
 
-print(df_words.count())
-
+# save ngrams and stop spark
 print("saving dataframe...")
-df_words.write.mode("overwrite").saveAsTable("ng_"+language)
+df_ngrams.write.mode("overwrite").saveAsTable("ng_"+language)
 print("saved", language)
 
 spark.sparkContext.stop()
