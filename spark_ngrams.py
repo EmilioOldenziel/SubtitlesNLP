@@ -3,7 +3,7 @@
 import argparse
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode
+from pyspark.sql.functions import col, explode, count
 from pyspark.ml.feature import NGram, StopWordsRemover
 from os import environ, path
 
@@ -34,7 +34,7 @@ print("Web URL:", spark.sparkContext.uiWebUrl)
 language = args.language
 
 # init stopword remover
-stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ","]) 
+stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ",", "'"]) 
 # init ngram maker
 ngram = NGram(n=2, inputCol="filtered_words", outputCol="ngrams")  
 
@@ -52,7 +52,14 @@ df_words_clean = df_words_clean.drop("words").dropna()
 
 # make ngrams with n=2 (words)
 df_ngrams = ngram.transform(df_words_clean) 
-df_ngrams = df_ngrams.drop("filtered_words").dropna().withColumn("ngrams", explode(col("ngrams")))
+df_ngrams = df_ngrams \
+    .drop("filtered_words") \
+    .dropna() \
+    .withColumn("ngrams", explode(col("ngrams"))) \
+    .groupBy("ngrams").agg(count(col("ngrams"))) \
+    .select(col("ngrams"),col("count(ngrams)").alias("frequency")) \
+    .filter("frequency > 1") \
+    .sort(col("frequency").desc())
 
 # save ngrams and stop spark
 print("saving dataframe...")
