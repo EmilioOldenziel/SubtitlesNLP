@@ -35,7 +35,7 @@ print("Web URL:", spark.sparkContext.uiWebUrl)
 language = args.language
 
 # init stopword remover
-stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ",", "'"]) 
+stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ",", "'", "?", "-"]) 
 
 # skipgram udf
 def skipgram(sentence):
@@ -66,7 +66,6 @@ df_skipgrams = df_words_clean \
     .groupBy("skipgrams").agg(count(col("skipgrams"))) \
     .select(col("skipgrams"),col("count(skipgrams)").alias("frequency")) \
     .filter("frequency > 1") \
-    .sort(col("frequency").desc()) \
 
 # save ngrams and stop spark
 print("saving dataframe...")
