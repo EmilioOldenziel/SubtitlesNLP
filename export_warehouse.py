@@ -35,7 +35,7 @@ if table not in [t.name for t in spark.catalog.listTables()]:
 df = spark.sql("SELECT * FROM " + table)
 
 print("exporting dataframe...")
-df.write.csv(table + '.csv')
+df.repartition(1).write.csv(table + '.csv')
 print("exported", table)
 
 spark.sparkContext.stop()
