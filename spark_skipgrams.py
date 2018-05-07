@@ -34,8 +34,10 @@ print("Web URL:", spark.sparkContext.uiWebUrl)
 # set subtitle language to make ngram of
 language = args.language
 
+symbols = [".", ",", "'", '?', '-', '"', '#', '...', '~', "[", "]", "{", "}", ")", "(", "_"]
+
 # init stopword remover
-stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=[".", ",", "'", "?", "-"]) 
+stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=symbols) 
 
 # skipgram udf
 def skipgram(sentence):
