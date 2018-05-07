@@ -3,7 +3,7 @@
 import argparse
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, count, udf
+from pyspark.sql.functions import col, explode, count, udf, lower
 from pyspark.sql.types import  ArrayType, StringType
 from pyspark.ml.feature import NGram, StopWordsRemover
 from os import environ, path
@@ -44,6 +44,8 @@ def skipgram(sentence):
     
 skipgrams_udf = udf(skipgram, ArrayType(ArrayType(ArrayType(StringType()))))
 
+lowercase_udf = udf(lambda sentence: [w.lower() for w in sentence], ArrayType(StringType()))
+
 # check if table exists for language, if not: quit
 if language not in [table.name for  table in spark.catalog.listTables()]:
     print("Hive tables for language", language, "was not found")
@@ -51,6 +53,9 @@ if language not in [table.name for  table in spark.catalog.listTables()]:
 
 #read table
 df_subtitles = spark.sql("SELECT * FROM " + language).select(col('w').alias('words'))
+
+#to lowercase
+df_subtitles = df_subtitles.withColumn("words", lowercase_udf(col("words")))
 
 # remove stopwords
 df_words_clean = stopwords_remover.transform(df_subtitles.dropna())
