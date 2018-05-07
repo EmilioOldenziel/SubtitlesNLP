@@ -52,13 +52,15 @@ if language not in [table.name for  table in spark.catalog.listTables()]:
     exit(-1)
 
 #read table
-df_subtitles = spark.sql("SELECT * FROM " + language).select(col('w').alias('words'))
+df_subtitles = spark.sql("SELECT * FROM " + language) \
+    .select(col('w').alias('words')) \
+    .dropna()
 
 #to lowercase
 df_subtitles = df_subtitles.withColumn("words", lowercase_udf(col("words")))
 
 # remove stopwords
-df_words_clean = stopwords_remover.transform(df_subtitles.dropna())
+df_words_clean = stopwords_remover.transform(df_subtitles)
 df_words_clean = df_words_clean.drop("words").dropna()
 
 # make skipgrams
