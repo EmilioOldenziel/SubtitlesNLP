@@ -33,6 +33,7 @@ df_subtitles = spark.sql("SELECT * FROM " + language)
 df_wc = df_subtitles \
     .withColumn("word", explode(col("w"))) \
     .drop("w") \
+    .withColumn('word', lower(col('word')))
     .groupBy("word").agg(count(col("word"))) \
     .select(col("word"),col("count(word)").alias("frequency")) \
     .sort(col("frequency").desc())
