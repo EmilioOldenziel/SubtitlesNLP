@@ -3,7 +3,7 @@
 import argparse
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, count
+from pyspark.sql.functions import col, explode, count, lower
 from pyspark.ml.feature import NGram, StopWordsRemover
 from os import environ, path
 
@@ -45,6 +45,9 @@ if language not in [table.name for  table in spark.catalog.listTables()]:
 
 #read table
 df_subtitles = spark.sql("SELECT * FROM " + language).select(col('w').alias('words'))
+
+#to lowercase
+df_subtitles = df_subtitles.withColumn("words", lower(col("words")))
 
 # remove stopwords
 df_words_clean = stopwords_remover.transform(df_subtitles.dropna())

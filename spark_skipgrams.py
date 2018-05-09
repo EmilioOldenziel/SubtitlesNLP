@@ -42,7 +42,7 @@ stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words
 # skipgram udf
 def skipgram(sentence):
     length = len(sentence)
-    return [list(zip(len(sentence[i+1:length])*[n],sentence[i+1:length])) for i, n in enumerate(sentence[:length-1])]
+    return [list(zip(len(sentence[i+1:length])*[w],sentence[i+1:length])) for i, w in enumerate(sentence[:length-1])]
     
 skipgrams_udf = udf(skipgram, ArrayType(ArrayType(ArrayType(StringType()))))
 

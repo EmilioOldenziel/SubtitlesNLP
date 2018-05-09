@@ -1,6 +1,6 @@
 import argparse
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, count, udf, lower
+from pyspark.sql.functions import col, explode, count, udf
 from pyspark.sql.types import  ArrayType, StringType
 from pyspark.ml.feature import NGram, StopWordsRemover
 from os import environ, path
@@ -28,7 +28,7 @@ spark = SparkSession \
 language = args.language
 
 df_wc = spark.sql("select * from wc_" + language)
-df_sg = spark.sql("select * from sg_" + language)
+df_sg = spark.sql("select * from sg_" + language).filter(col('skipgrams')[0] != col('skipgrams')[1])
 
 df = df_sg \
     .join(df_wc.select(col('frequency').alias("frequency_word_1"), 'word'), [df_sg.skipgrams[0] == df_wc.word], 'left').drop('word') \
@@ -37,7 +37,6 @@ df = df_sg \
     .withColumn('balance', (col('frequency_word_1')/col('frequency_word_2'))) \
     .sort(col("frequency_normalised").desc())
 
-print(df.count(), "normalised grams for", language)
 print("saving dataframe...")
 df.write.mode("overwrite").saveAsTable("nsg_"+language)
 print("saved", language)

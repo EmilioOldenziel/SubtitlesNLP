@@ -2,7 +2,7 @@
 
 import argparse
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, count
+from pyspark.sql.functions import col, explode, count, lower
 from os import path, environ
 
 parser = argparse.ArgumentParser()
@@ -37,7 +37,6 @@ df_wc = df_subtitles \
     .groupBy("word").agg(count(col("word"))) \
     .select(col("word"),col("count(word)").alias("frequency")) \
 
-print(df_wc.count(), "words counted for", language)
 print("saving dataframe...")
 df_wc.write.mode("overwrite").saveAsTable("wc_"+language)
 print("saved", language)
