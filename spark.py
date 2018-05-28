@@ -7,7 +7,7 @@ class Spark():
         self.warehouse_location = path.abspath('spark-warehouse')
         self.set_submit_args()
 
-    def set_submit_args(self, memory="15g"):
+    def set_submit_args(self, memory="150g"):
         # load spark-xml and set driver memory (150GB)
         submit_args = [
             '--packages com.databricks:spark-xml_2.11:0.4.1',

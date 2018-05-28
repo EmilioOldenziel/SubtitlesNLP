@@ -2,56 +2,43 @@
 
 import argparse
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, explode, count, udf, lower
+from spark import Spark
+from pyspark.sql.functions import col, explode, count, udf, lower, collect_list, sum
 from pyspark.sql.types import  ArrayType, StringType
 from pyspark.ml.feature import NGram, StopWordsRemover
-from os import environ, path
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--language', help='give language to parse', required=True)
 args = parser.parse_args()
 
-# warehouse_location points to the default location for managed databases and tables
-warehouse_location = path.abspath('spark-warehouse')
-
-# set driver memory
-submit_args = [
-    '--driver-memory 15g',
-    'pyspark-shell'
-]
-environ['PYSPARK_SUBMIT_ARGS'] =  " ".join(submit_args)
-
-spark = SparkSession \
-    .builder \
-    .appName("Python Spark ngrams") \
-    .config("spark.sql.warehouse.dir", warehouse_location) \
-    .enableHiveSupport().getOrCreate()
-
-# print spark webinterface url
-print("Web URL:", spark.sparkContext.uiWebUrl)
+sp = Spark()
+spark = sp.make_spark_session()
 
 # set subtitle language to make ngram of
 language = args.language
 
-symbols = [".", ",", "'", '?', '-', '"', '#', '...', '~', "[", "]", "{", "}", ")", "(", "_"]
+symbols = [".", ",", "'", '?', '-', '"', '#', '...', '~', "[", "]", "{", "}", ")", "(", "_", "!", "/", "\\", ":", "..", "$"]
 
 # init stopword remover
 stopwords_remover = StopWordsRemover(inputCol="words", outputCol="filtered_words", stopWords=symbols) 
 
 # skipgram udf
 def skipgram(sentence):
+    enumerated_skips = []
     length = len(sentence)
-    return [list(zip(len(sentence[i+1:length])*[w],sentence[i+1:length])) for i, w in enumerate(sentence[:length-1])]
+    for i, w in enumerate(sentence[:length-1]):
+        skips = list(zip(len(sentence[i+1:length])*[w],sentence[i+1:length]))
+        skips = [(x,y,i) for x, y in skips]
+        enumerated_skips += skips
+    return enumerated_skips
+
     
-skipgrams_udf = udf(skipgram, ArrayType(ArrayType(ArrayType(StringType()))))
+skipgrams_udf = udf(skipgram, ArrayType(ArrayType(StringType())))
 
 lowercase_udf = udf(lambda sentence: [w.lower() for w in sentence], ArrayType(StringType()))
 
-# check if table exists for language, if not: quit
-if language not in [table.name for  table in spark.catalog.listTables()]:
-    print("Hive tables for language", language, "was not found")
-    exit(-1)
+# check if language table exists
+sp.table_exists(spark, language)
 
 #read table
 df_subtitles = spark.sql("SELECT * FROM " + language) \
@@ -72,14 +59,16 @@ df_skipgrams = df_words_clean \
     .dropna() \
     .withColumn("skipgrams", explode(col("skipgrams"))) \
     .dropna() \
-    .withColumn("skipgrams", explode(col("skipgrams"))) \
     .groupBy("skipgrams").agg(count(col("skipgrams"))) \
     .select(col("skipgrams"),col("count(skipgrams)").alias("frequency")) \
-    .filter("frequency > 1") \
+    .withColumn("word1", col("skipgrams")[0]) \
+    .withColumn("word2", col("skipgrams")[1]) \
+    .withColumn("skip", col("skipgrams")[2]) \
+    .drop("skipgrams") \
+    .groupby("word1", "word2").agg(sum(col("frequency")), collect_list(col("skip"))) \
+    .select(col("word1"), col("word2"), col("sum(frequency)").alias("frequency"), col("collect_list(skip)").alias("skips")) \
+    .filter("frequency > 1")
 
-# save ngrams and stop spark
-print("saving dataframe...")
-df_skipgrams.write.mode("overwrite").saveAsTable("sg_"+language)
-print("saved", language)
+sp.save_table(df_skipgrams, "sg_" + language)
 
 spark.sparkContext.stop()
