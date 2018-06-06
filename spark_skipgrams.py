@@ -1,10 +1,11 @@
 # coding: utf-8
 
 import argparse
+import json
 
 from spark import Spark
 from pyspark.sql.functions import col, explode, count, udf, lower, collect_list, sum
-from pyspark.sql.types import  ArrayType, StringType
+from pyspark.sql.types import  ArrayType, StringType, IntegerType
 from pyspark.ml.feature import NGram, StopWordsRemover
 
 parser = argparse.ArgumentParser()
@@ -32,8 +33,18 @@ def skipgram(sentence):
         enumerated_skips += skips
     return enumerated_skips
 
+def histogram(skips):
+    hist = {}
+    for skip in skips:
+        skip = int(skip)
+        if skip in hist:
+            hist[skip] += 1
+        else:
+            hist[skip] = 1
+    return [[k,v] for k,v in hist.items()]
     
 skipgrams_udf = udf(skipgram, ArrayType(ArrayType(StringType())))
+histogram_udf = udf(histogram, ArrayType(ArrayType(IntegerType())))
 
 lowercase_udf = udf(lambda sentence: [w.lower() for w in sentence], ArrayType(StringType()))
 
@@ -59,14 +70,14 @@ df_skipgrams = df_words_clean \
     .dropna() \
     .withColumn("skipgrams", explode(col("skipgrams"))) \
     .dropna() \
-    .groupBy("skipgrams").agg(count(col("skipgrams"))) \
-    .select(col("skipgrams"),col("count(skipgrams)").alias("frequency")) \
     .withColumn("word1", col("skipgrams")[0]) \
     .withColumn("word2", col("skipgrams")[1]) \
     .withColumn("skip", col("skipgrams")[2]) \
     .drop("skipgrams") \
-    .groupby("word1", "word2").agg(sum(col("frequency")), collect_list(col("skip"))) \
-    .select(col("word1"), col("word2"), col("sum(frequency)").alias("frequency"), col("collect_list(skip)").alias("skips")) \
+    .groupby("word1", "word2").agg(count(col("skip")), collect_list(col("skip"))) \
+    .withColumn('skips', histogram_udf(col("collect_list(skip)"))) \
+    .drop("collect_list(skip)") \
+    .select(col("word1"), col("word2"), col("count(skip)").alias("frequency"), col("skips")) \
     .filter("frequency > 1")
 
 sp.save_table(df_skipgrams, "sg_" + language)
