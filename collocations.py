@@ -13,7 +13,7 @@ class Collocations():
 
     def set_names(self):
         # list of ~94k US babynames to remove (hello, john), (james, bond)
-        names = pd.read_csv("other/names.csv", names=['name'])['name'].tolist()
+        names = pd.read_csv("data/names.csv", names=['name'])['name'].tolist()
         self.names = [i for i in names if type(i) == str] #remove non strings
 
     def read_df(self, language):
@@ -43,6 +43,13 @@ class Collocations():
         df.word1 = self.stem_column(df.word1, language)
         df.word2 = self.stem_column(df.word2, language)
         return df.groupby(['word1', 'word2'], as_index=False)['frequency'].sum()
+
+    def get_language_filter(self, language):
+        filters = {
+            "de": ['ich', 'du', 'sie', 'mir', 'wir', 'ihr', 'uns', 'euch', 'die', 'das', 'der', 'den', 'er', 'und', 'ein', 'eine', 'einer', 'einem', 'mein', 'dein', 'nicht', 'wie', 'wo', 'wann', 'was'],
+            "nl": ['ik', 'jij', 'hij', 'zij', 'wij', 'we', 'jullie', 'hun', 'mij', 'me', 'mijn', 'haar', 'hem', 'een', 'de', 'het', 'wie', 'wat', 'waar', 'hoe', 'niet']
+        }
+        return filters[language]
 
     def filter_df(self, df):
         self.assert_columns(df, ["word1", "word2"])
