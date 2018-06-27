@@ -73,6 +73,8 @@ Besides the collocations the wordcount for each individual word is also computed
 ## Bigram-accociation metrics
 
 Where computed using Apache spark.
+
+
 |word1     |word2     |frequency|skip_average|skip_variance|word_1_frequency|word_2_frequency|chi       |pmi   |ll      |fisher|
 |----------|----------|---------|------------|-------------|----------------|----------------|----------|------|--------|------|
 |verenigde |   staten | 11015   |8.58        |8.54         | 12776          | 16449          |3.199e+08 |14.825|2.29e+05|1.00  |
