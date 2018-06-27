@@ -46,17 +46,52 @@ $\chi^2 = \sum_{i,j}{\frac{(O_{i,j}-E_{i,j})^2}{E_{i,j}}}$
 
 The dataset the is used is based on the subtitle data from [opensubtitles](http://www.opensubtitles.org/) of which we use the German, Dutch, French and Spanish subtitles.
 
-### Processing
+### Pre-processing
   To handle the 500GB of subtitle data from the opensubtitle data, single-core processing on commodity hardware has become insufficient. Therefore, multi-core processing is needed to bring the processing time down to a workable amount. To achieve this, the processing was performed on a 64 core cluster using Apache Spark to utilize multi-core processing.
 
-  First the raw subtitle data was read to a DataFrame and cleaned. After this the collocations are computed and grouped with frequency count and the skip list is counted to a histograms.
+  First the raw subtitle data was read to a DataFrame and cleaned. After this the collocations are computed and grouped with frequency count and the skip list is counted to a histograms. A section of the results is show in the table below.
+
+
+|    word1|  word2|frequency|               skips|
+|---------|-------|---------|--------------------|
+| zusammen|   eine|      999|{0: 99, 1, 39,...   |
+|geschieht|    mit|      999|{0: 8, 1: 692,...   |
+|     sehe|    für|      999|{0: 114, 1: 45,...  |
+|      den|knochen|      999|{0: 16, 1: 73,...   |
+|      mr.|  seine|      999|{0: 392, 1: 91,...  |
+|     ding|    auf|      999|{0: 7, 1: 162,...   |
+|     mein|   zeit|      999|{0: 429, 1: 13,...  |
+|    armee|    von|      999|{0: 6, 1: 155,...   |
+|   arbeit|   mich|      999|{0: 22, 1: 118,...  |
+|     rede|     so|      999|{0: 514, 1: 26,...  |
+
+Besides the collocations the wordcount for each individual word is also computed and stored in a seperate dataset for later use.
 
 # Experiments
-  The proccessed datasets where..
+  After the datasets have been pre-processed the wordcounts of $w_1$ and $w_2$ are added to the dataset. So we can compute the metrics.
 
 ## Bigram-accociation metrics
+|word1     |word2     |frequency|skip_average|skip_variance|word_1_frequency|word_2_frequency|chi       |pmi   |ll      |fisher|
+|----------|----------|---------|------------|-------------|----------------|----------------|----------|------|--------|------|
+|verenigde |   staten | 11015   |8.58        |8.54         | 12776          | 16449          |3.199e+08 |14.825|2.29e+05|1.00  |
+|      new |     york | 61385   |5.68        |5.67         | 86058          | 63234          |3.836e+08 |12.609|1.12e+06|1.00  |
+|      los |  angeles | 12852   |5.68        |5.66         |114910          | 13089          |6.083e+07 |12.209|2.17e+05|0.99  |
+|      leg |     neer | 23371   |0.48        |0.48         | 69712          |112348          |3.860e+07 |10.691|3.13e+05|1.00  |
+|      per |  ongeluk | 11879   |4.93        |4.92         |104282          | 59025          |1.268e+07 |10.062|1.45e+05|1.00  |
+|    leren |   kennen | 19048   |6.86        |6.84         |109016          | 96000          |1.917e+07 | 9.977|2.33e+05|1.00  |
+|     lang |    duren | 10708   |3.75        |3.74         |327070          | 31209          |6.206e+06 | 9.183|1.19e+05|0.99  |
+|   schiet |     neer | 15196   |1.93        |1.93         |133944          |112348          |8.476e+06 | 9.128|1.65e+05|1.00  |
+|     tien |  minuten | 18798   |3.30        |3.29         |120470          |166115          |9.751e+06 | 9.023|2.02e+05|1.00  |
+|      per |     week | 12378   |5.73        |5.71         |104282          |133675          |6.068e+06 | 8.942|1.31e+05|0.99  |    
 
 ## Supervised learning
+  ### Dataset creation
+  To perform supervised learning to classify separable verbs a labeled dataset has to be created. This is performed using 9000 German so called "Trennenbare verben" retrieved from [canoonet](http://www.canoo.net) , which are german seperatable verbs. To query the collocations that contain separable verbs the collocation words are concatenated in order and reverse order. These resulting words and canoonet list are then stemmed using the nltk German stemmer. 
+
+  ### Learning
+  jsfhgkdfgh
+
+  ![alt text](notebooks/DT_score.png "Logo Title Text 1")
 
 
 
