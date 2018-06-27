@@ -44,10 +44,10 @@ $\chi^2 = \sum_{i,j}{\frac{(O_{i,j}-E_{i,j})^2}{E_{i,j}}}$
 
 # Dataset
 
-The dataset the is used is based on the subtitle data from [opensubtitles](http://www.opensubtitles.org/) of which we use the German, Dutch, French and Spanish subtitles.
+The dataset the is used is based on the subtitle data from [OpenSubtitles](http://www.opensubtitles.org/) of which we use the German, Dutch, French and Spanish subtitles.
 
 ### Pre-processing
-  To handle the 500GB of subtitle data from the opensubtitle data, single-core processing on commodity hardware has become insufficient. Therefore, multi-core processing is needed to bring the processing time down to a workable amount. To achieve this, the processing was performed on a 64 core cluster using Apache Spark to utilize multi-core processing.
+  To handle the 500GB of subtitle data from the opensubtitle data, single-core processing on commodity hardware has become insufficient. Therefore, multi-core processing is needed to bring the processing time down to a workable amount. To achieve this, the processing was performed on a 64 core cluster using [Apache Spark](https://spark.apache.org/) to utilize multi-core processing.
 
   First the raw subtitle data was read to a DataFrame and cleaned. After this the collocations are computed and grouped with frequency count and the skip list is counted to a histograms. A section of the results is show in the table below.
 
@@ -71,6 +71,8 @@ Besides the collocations the wordcount for each individual word is also computed
   After the datasets have been pre-processed the wordcounts of $w_1$ and $w_2$ are added to the dataset. So we can compute the metrics.
 
 ## Bigram-accociation metrics
+
+Where computed using Apache spark.
 |word1     |word2     |frequency|skip_average|skip_variance|word_1_frequency|word_2_frequency|chi       |pmi   |ll      |fisher|
 |----------|----------|---------|------------|-------------|----------------|----------------|----------|------|--------|------|
 |verenigde |   staten | 11015   |8.58        |8.54         | 12776          | 16449          |3.199e+08 |14.825|2.29e+05|1.00  |
@@ -86,10 +88,12 @@ Besides the collocations the wordcount for each individual word is also computed
 
 ## Supervised learning
   ### Dataset creation
-  To perform supervised learning to classify separable verbs a labeled dataset has to be created. This is performed using 9000 German so called "Trennenbare verben" retrieved from [canoonet](http://www.canoo.net) , which are german seperatable verbs. To query the collocations that contain separable verbs the collocation words are concatenated in order and reverse order. These resulting words and canoonet list are then stemmed using the nltk German stemmer. 
+  To perform supervised learning to classify separable verbs a labeled dataset has to be created. This is performed using 9000 German so called "Trennenbare verben" retrieved from [Canoonet](http://www.canoo.net) , which are german seperatable verbs. To query the collocations that contain separable verbs the collocation words are concatenated in order and reverse order. These resulting words and the canoonet list are then stemmed using the nltk German stemmer. Words that appear in both sets are assigned the label $1$ in the collocations dataset and a similar amount of random selected collocations that do not appear in both is assigned the label $0$. This results in a dataset containing 6936 samples.
 
   ### Learning
-  jsfhgkdfgh
+  To learn rules for classifying separable verbs multiple classification algorithms where applied on the training data. DecisionTrees turned out to be only classfier that performed better then random guessing. A 5-fold cross validation using train- and testset is performed on as validation scheme using the F1-score.
+
+  #### Results
 
   ![alt text](notebooks/DT_score.png "Logo Title Text 1")
 
