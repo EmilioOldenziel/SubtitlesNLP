@@ -1,3 +1,6 @@
 numpy
 pyspark
 pandas
+matplotlib
+nltk
+sklearn
