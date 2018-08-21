@@ -25,8 +25,7 @@ for language in ["de", "nl"]:
 		]
 
 	# features that are selected for classification
-	# feature_names = ["frequency", "number_of_skips", "skip_variance", "skip_average", "word_1_frequency", "word_2_frequency", "symmetric", "chi", "pmi", "fisher", "ll"]
-	feature_names = ["skips", "word_1_frequency", "word_2_frequency"]
+	feature_names = ["frequency", "number_of_skips", "skip_variance", "skip_average", "most_frequent_skip", "word_1_frequency", "word_2_frequency", "symmetric", "chi", "pmi", "fisher", "ll"]
 
 	# get features
 	v_df = verb_df[feature_names]
@@ -47,9 +46,4 @@ for language in ["de", "nl"]:
 	filter_df = filter_df.sample(v_df.index.size)
 	df_XY = v_df.append(filter_df).sample(frac=1)
 
-	df_XY["skips"] = df_XY["skips"].apply(literal_eval)
-	max_skip = max(df_XY["skips"].apply(max))
-	skip_df = pd.DataFrame(df_XY["skips"].apply(lambda skips: [skips[i] if i in skips else 0 for i in range(0,max_skip+1)]).values.tolist())
-	skip_df["label"] = df_XY["label"].tolist()
-
-	skip_df.to_csv(f"data/seperatable verbs/skips_{language}_dataset.csv")
+	df_XY.to_csv(f"data/seperatable verbs/{language}_dataset.csv")
