@@ -133,6 +133,7 @@ class Collocations():
             .apply(lambda row:
                 sum([(k*v)- row['skip_average'] for k,v in row['skips'].items()])/sum(row['skips'].values())
             , axis=1)
+        df["most_frequent_skip"] = df["skips"].apply(lambda skips: max(skips.items(), key=itemgetter(1))[0])
         return df
     
     def add_symmetry(self, df):

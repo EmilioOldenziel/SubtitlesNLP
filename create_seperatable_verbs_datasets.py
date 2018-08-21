@@ -25,13 +25,11 @@ for language in ["de", "nl"]:
 		]
 
 	# features that are selected for classification
-	#feature_names = ["frequency", "number_of_skips", "skip_variance", "skip_average", "word_1_frequency", "word_2_frequency", "symmetric", "chi", "pmi", "fisher", "ll"]
+	# feature_names = ["frequency", "number_of_skips", "skip_variance", "skip_average", "word_1_frequency", "word_2_frequency", "symmetric", "chi", "pmi", "fisher", "ll"]
 	feature_names = ["skips", "word_1_frequency", "word_2_frequency"]
 
 	# get features
 	v_df = verb_df[feature_names]
-
-	
 
 	# get list of to filter words
 	language_filter = col.get_language_filter(language)
