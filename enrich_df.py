@@ -1,7 +1,7 @@
 import pandas as pd
 from collocations import Collocations
 
-col = Collocations()
+col = Collocations(use_most_skip=False)
 
 for language in ['de', 'nl', 'fr', 'es']:
 

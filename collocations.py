@@ -7,7 +7,8 @@ from nltk.stem.snowball import *
 
 class Collocations():
 
-    def __init__(self, **kwargs):
+    def __init__(self, use_most_skip=False, **kwargs):
+        self.USE_MOST_SKIP = use_most_skip
         self.bigram_measures = BigramAssocMeasures()
         self.total_bigrams = 554100929 # total number of bigrams before spark export
         self.set_names()
@@ -135,6 +136,14 @@ class Collocations():
                 sum([(k*v)- row['skip_average'] for k,v in row['skips'].items()])/sum(row['skips'].values())
             , axis=1)
         df["most_frequent_skip"] = df["skips"].apply(lambda skips: max(skips.items(), key=itemgetter(1))[0])
+
+        if self.USE_MOST_SKIP:
+            df["frequency"] = df[["skips", "most_frequent_skip"]] \
+                .apply(
+                    lambda row: row["skips"][row["most_frequent_skip"]], 
+                    axis=1
+                )
+
         return df
     
     def add_symmetry(self, df):
