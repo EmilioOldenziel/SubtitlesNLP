@@ -16,6 +16,12 @@ language = args.language
 
 df_subtitles = sp.load_table(spark_session, language)
 
+df_wc = df_subtitles \
+    .withColumn("word", explode(col("w"))) \
+    .drop("w") \
+    .withColumn('word', lower(col('word'))) \
+    .groupBy("word").agg(count(col("word"))) \
+    .select(col("word"),col("count(word)").alias("frequency"))
 
 sp.save_table(df_wc, "wc_"+language)
 
